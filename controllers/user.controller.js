@@ -50,7 +50,6 @@ const authLogin = async (req, res) => {
 
   let result = await findUser(email);
 
-  console.log(result);
   if (!result) {
     res.json("User registered not yet!!");
   } else {
@@ -61,7 +60,6 @@ const authLogin = async (req, res) => {
     }
 
     password = md5(password);
-    console.log(password);
     if (password !== result[0].password) {
       res.json("Invalid user details");
     } else {

@@ -148,7 +148,6 @@ const portfolio = async(userId) => {
             raw:true
         }
     )
-    console.log(userPortfolio)
     return userPortfolio
 }
 

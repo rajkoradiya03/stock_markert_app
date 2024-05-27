@@ -4,11 +4,10 @@ require("dotenv").config();
 
 try {
   var cookieExtractor = function (req) {
-    let token
+    let token;
     if (req) {
-      token = req.cookies?.token || req.headers.authorization.split(" ")[1];
+      token = req.cookie?.token || req.headers.authorization.split(" ")[1];
     }
-    console.log(token);
     return token;
   };
 
