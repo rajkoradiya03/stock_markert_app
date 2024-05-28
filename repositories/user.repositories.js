@@ -173,8 +173,10 @@ const stockHoldByUser = async(userId) => {
                     }
                 }
             ],
+            raw:true
         }
     )
+    console.log(userStock)
     return userStock
 }
 
