@@ -101,6 +101,12 @@ const createTrade = async (trade)=>{
     return trades;
 }
 
+const updateTrade = async(trade, buyOrderId,sellOrderId,stockId)=> {
+    const trades = await db.trades.update(trade, {where: {buyOrderId: buyOrderId,sellOrderId:sellOrderId, stockId: stockId}} )
+
+    return trades
+}
+
 const userAccount = async(accountDetails)=>{
     const account = await db.user_demat_account_details.create(accountDetails);
     return account
@@ -176,4 +182,4 @@ const addBank = async (bankDetails) =>{
     const result = await db.user_bank_details.create(bankDetails);
     return result;
 }
-module.exports = {createUser, updateUser, allStocks, checkOrder, orderStatus, insertOrder, updateOrder, orderTransaction, getAllOrder, createTrade, userAccount, accountDetails,  addMoney, userStocks, removeStock, portfolio, stockHoldByUser, addBank, findUser}
+module.exports = {createUser, updateUser, allStocks, checkOrder, orderStatus, insertOrder, updateOrder, orderTransaction, getAllOrder, createTrade, userAccount, accountDetails,  addMoney, userStocks, removeStock, portfolio, stockHoldByUser, addBank, findUser, updateTrade}

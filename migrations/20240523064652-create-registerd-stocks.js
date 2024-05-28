@@ -19,7 +19,7 @@ module.exports = {
         type: Sequelize.STRING
       },
       stock_current_price: {
-        type: Sequelize.DECIMAL
+        type: Sequelize.DECIMAL(10,2)
       },
       market_value: {
         type: Sequelize.STRING

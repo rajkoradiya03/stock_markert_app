@@ -32,8 +32,11 @@ module.exports = {
       order_type: {
         type: Sequelize.STRING
       },
+      per_share_price: {
+        type: Sequelize.DECIMAL(10,2)
+      },
       total_price: {
-        type: Sequelize.DECIMAL
+        type: Sequelize.DECIMAL(10,2)
       },
       no_of_share: {
         type: Sequelize.INTEGER

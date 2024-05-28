@@ -23,8 +23,9 @@ module.exports = (sequelize, DataTypes) => {
     userId: DataTypes.INTEGER,
     stockId: DataTypes.INTEGER,
     order_type: DataTypes.STRING,
-    total_price: DataTypes.DECIMAL,
+    per_share_price: DataTypes.DECIMAL,
     no_of_share: DataTypes.INTEGER,
+    total_price: DataTypes.DECIMAL,
     statusId: DataTypes.INTEGER
   }, {
     sequelize,

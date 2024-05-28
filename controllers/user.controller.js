@@ -19,6 +19,7 @@ const {
   stockHoldByUser,
   addBank,
   findUser,
+  updateTrade,
 } = require("../repositories/user.repositories");
 
 const insertUser = async (req, res) => {
@@ -115,14 +116,15 @@ const orderbyUser = async (req, res) => {
       orderDetails["userId"] = userId;
       orderDetails["stockId"] = stockId;
       orderDetails["order_type"] = req.body.orderType;
-      orderDetails["total_price"] = req.body.totalPrice;
+      orderDetails["per_share_price"] = req.body.perSharePrice
       orderDetails["no_of_share"] = req.body.noOfShare;
+      orderDetails["total_price"] = Number(req.body.perSharePrice) * Number(req.body.noOfShare);
       const statusId = await orderStatus(order.count);
       orderDetails["statusId"] = statusId[0].id;
       orderDetails["createdAt"] = new Date();
       orderDetails["order_transaction_details"] = {};
       orderDetails["order_transaction_details"]["userId"] = userId;
-      orderDetails["order_transaction_details"]["amount"] = req.body.totalPrice;
+      orderDetails["order_transaction_details"]["amount"] = orderDetails["total_price"];
       orderDetails["order_transaction_details"]["transaction_type"] = "debit";
       orderDetails["order_transaction_details"]["transaction_date"] = new Date()
         .toISOString()
@@ -130,8 +132,8 @@ const orderbyUser = async (req, res) => {
 
       const dataCount = await accountDetails(userId);
       const balance =
-        Number(dataCount.rows[0].balance) - Number(req.body.totalPrice);
-
+        Number(dataCount.rows[0].balance) - orderDetails["total_price"]
+      console.log(balance)
       if (balance > 0) {
         await addMoney(balance, userId);
         let result = await insertOrder(orderDetails);
@@ -143,14 +145,15 @@ const orderbyUser = async (req, res) => {
       }
     } else {
       if (order.rows[0].order_type == req.body.orderType) {
+        const totalPrice = Number(req.body.noOfShare) * Number(req.body.perSharePrice)
         orderDetails["total_price"] =
-          Number(order.rows[0].total_price) + Number(req.body.totalPrice);
+          Number(order.rows[0].total_price) + totalPrice
         orderDetails["no_of_share"] =
           Number(order.rows[0].no_of_share) + Number(req.body.noOfShare);
 
         const dataCount = await accountDetails(userId);
         const balance =
-          Number(dataCount.rows[0].balance) - Number(req.body.totalPrice);
+          Number(dataCount.rows[0].balance) - orderDetails['total_price'];
 
         if (balance > 0) {
           await addMoney(balance, userId);
@@ -161,7 +164,7 @@ const orderbyUser = async (req, res) => {
               order.rows[0].id,
               userId,
               "debit",
-              req.body.totalPrice
+              totalPrice
             )
           );
 
@@ -172,7 +175,6 @@ const orderbyUser = async (req, res) => {
       } else {
         orderDetails["no_of_share"] =
           Number(order.rows[0].no_of_share) - Number(req.body.noOfShare);
-
         let result = await updateOrder(orderDetails, order.rows[0].id);
 
         if (orderDetails["no_of_share"] == 0) {
@@ -182,15 +184,15 @@ const orderbyUser = async (req, res) => {
           orderDetails["userId"] = userId;
           orderDetails["stockId"] = stockId;
           orderDetails["order_type"] = req.body.orderType;
-          orderDetails["total_price"] = req.body.totalPrice;
+          orderDetails['per_share_price'] = req.body.perSharePrice
+          orderDetails['total_price'] = Number(req.body.noOfShare) * Number(req.body.perSharePrice)
           orderDetails["no_of_share"] = req.body.noOfShare;
           const statusId = await orderStatus(order.count);
           orderDetails["statusId"] = statusId[0].id;
           orderDetails["createdAt"] = new Date();
           orderDetails["order_transaction_details"] = {};
           orderDetails["order_transaction_details"]["userId"] = userId;
-          orderDetails["order_transaction_details"]["amount"] =
-            req.body.totalPrice;
+          orderDetails["order_transaction_details"]["amount"] = orderDetails['total_price'];
           orderDetails["order_transaction_details"]["transaction_type"] =
             "credit";
           orderDetails["order_transaction_details"]["transaction_date"] =
@@ -200,21 +202,22 @@ const orderbyUser = async (req, res) => {
 
           const dataCount = await accountDetails(userId);
           const balance =
-            Number(dataCount.rows[0].balance) + Number(req.body.totalPrice);
+            Number(dataCount.rows[0].balance) + orderDetails["total_price"];
           await addMoney(balance, userId);
 
           let trade = {
             buyOrderId: order.rows[0].id,
             sellOrderId: result.id,
             stockId: stockId,
-            per_share_price: req.body.sharePrice,
+            per_share_price: req.body.perSharePrice,
             quantity: req.body.noOfShare,
           };
 
           const tradebyuser = await createTrade(trade);
           res.json({ result, tradebyuser });
         } else {
-          orderDetails["total_price"] = req.body.totalPrice;
+          orderDetails["per_share_price"] = req.body.perSharePrice
+          orderDetails["total_price"] = Number(req.body.noOfShare) * Number(req.body.perSharePrice);
           orderDetails["no_of_share"] = req.body.noOfShare;
 
           result = await updateOrder(orderDetails, order.rows[1].id);
@@ -224,23 +227,23 @@ const orderbyUser = async (req, res) => {
               order.rows[1].id,
               userId,
               "credit",
-              req.body.totalPrice
+              orderDetails["total_price"]
             )
           );
 
           const dataCount = await accountDetails(userId);
           const balance =
-            Number(dataCount.rows[0].balance) + Number(req.body.totalPrice);
+            Number(dataCount.rows[0].balance) + orderDetails["total_price"];
           await addMoney(balance, userId);
+
+          const buyOrderId = order.rows[0].id
+          const sellOrderId = order.rows[1].id
           let trade = {
-            buyOrderId: order.rows[0].id,
-            sellOrderId: order.rows[1].id,
-            stockId: stockId,
-            per_share_price: req.body.sharePrice,
+            per_share_price: req.body.perSharePrice,
             quantity: req.body.noOfShare,
           };
 
-          const tradebyuser = await createTrade(trade);
+          const tradebyuser = await updateTrade(trade, buyOrderId, sellOrderId, stockId);
           res.json({ result, transaction, tradebyuser });
         }
       }
